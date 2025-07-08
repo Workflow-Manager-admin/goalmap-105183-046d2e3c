@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Confetti from 'react-confetti';
 import './App.css';
+// Import modern, minimalist icons from react-icons
+import { FiHome, FiMap, FiTarget, FiSettings } from 'react-icons/fi';
+import { MdFlag, MdAddCircleOutline, MdStarOutline, MdSchool, MdWork, MdDone, MdBrightness4, MdBrightness7 } from 'react-icons/md';
 
 /**
- * Dashboard sidebar navigation items.
+ * Dashboard sidebar navigation items with icon components.
  */
 const SIDEBAR_LINKS = [
-  { icon: "🏠", label: "Dashboard" },
-  { icon: "🗺️", label: "My Roadmap" },
-  { icon: "🎯", label: "Goals" },
-  { icon: "⚙️", label: "Settings" },
+  { icon: <FiHome />, label: "Dashboard" },
+  { icon: <FiMap />, label: "My Roadmap" },
+  { icon: <FiTarget />, label: "Goals" },
+  { icon: <FiSettings />, label: "Settings" },
 ];
 
 // Color mapping for milestone statuses
@@ -43,24 +46,37 @@ function getMilestoneStatus(idx, milestone, milestones) {
   return "pending";
 }
 
-// Example milestones for roadmap (default state in App)
+/**
+ * Modern minimalist icons for milestones, by type/status.
+ */
+const milestoneIcons = {
+  study: <MdSchool />,
+  project: <FiMap />,
+  career: <MdWork />,
+  complete: <MdDone />,
+  custom: <MdStarOutline />,
+};
+
+/**
+ * Example milestones for roadmap (default state in App), now using icons.
+ */
 const INITIAL_MILESTONES = [
   {
-    icon: "📚",
+    icon: milestoneIcons.study,
     title: "Learn JavaScript",
     completed: true,
     description: "Master the basics of JS.",
     term: "short"
   },
   {
-    icon: "💻",
+    icon: milestoneIcons.project,
     title: "Build My First Project",
     completed: true,
     description: "Create and deploy a project.",
     term: "medium"
   },
   {
-    icon: "🧑‍💼",
+    icon: milestoneIcons.career,
     title: "Get Internship",
     completed: false,
     description: "Gain real-world experience.",
@@ -254,7 +270,7 @@ function App() {
       setAddFormError('Please enter a title.');
       return;
     }
-    const icon = "🌟"; // Use a default icon for custom milestones
+    const icon = milestoneIcons.custom; // Use a default icon for custom milestones
     const estimatedTerm = addFormData.term || guessTermFromDescription(addFormData.description, milestones.length);
     setMilestones(prev => [
       ...prev,
@@ -433,13 +449,13 @@ function App() {
       {/* Sidebar Navigation */}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <span role="img" aria-label="logo" style={{ fontSize: "2rem" }}>🚀</span>
-          <span className="sidebar-title">GoalMap</span>
+          <MdStarOutline style={{ fontSize: "2rem", color: "var(--primary)" }} aria-label="logo" />
+          <span className="sidebar-title" style={{ fontFamily: "'Montserrat', 'Segoe UI', Arial, sans-serif", letterSpacing: ".01em" }}>GoalMap</span>
         </div>
         <nav className="sidebar-nav">
           {SIDEBAR_LINKS.map((link, idx) => (
             <a className="sidebar-link" href="#" key={link.label} tabIndex={0}>
-              <span className="sidebar-icon">{link.icon}</span>
+              <span className="sidebar-icon" aria-hidden="true">{link.icon}</span>
               <span className="sidebar-link-label">{link.label}</span>
             </a>
           ))}
@@ -450,7 +466,15 @@ function App() {
             onClick={toggleTheme}
             aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
           >
-            {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+            {theme === 'light' ? (
+              <>
+                <MdBrightness4 style={{ verticalAlign: '-2px', marginRight: 5 }} /> Dark
+              </>
+            ) : (
+              <>
+                <MdBrightness7 style={{ verticalAlign: '-2px', marginRight: 5 }} /> Light
+              </>
+            )}
           </button>
         </div>
       </aside>
@@ -459,7 +483,7 @@ function App() {
       <main className="main-content">
         <section className="roadmap-section">
           <div className="roadmap-motivation-header" tabIndex={-1}>
-            <span role="img" aria-label="flag" className="roadmap-motivation-icon">🏁</span>
+            <MdFlag className="roadmap-motivation-icon" aria-label="flag" style={{ color: "var(--accent)" }} />
             <span>Your Journey to Success Starts Here</span>
           </div>
           <h1 className="roadmap-title">
@@ -506,12 +530,16 @@ function App() {
                 padding: '7px 16px',
                 fontWeight: 700,
                 borderRadius: 13,
-                marginLeft: 16
+                marginLeft: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                fontFamily: 'inherit',
               }}
               onClick={handleOpenAddForm}
               aria-label="Add Milestone"
             >
-              ＋ Add Milestone
+              <MdAddCircleOutline style={{ fontSize: '1.2em', marginBottom: '-2px' }} /> Add Milestone
             </button>
           </div>
           <div className="roadmap-container">
@@ -593,8 +621,12 @@ function App() {
                           color: status === "completed" ? "#fff" : color,
                           border: `2px solid ${borderColor}`,
                           boxShadow: status === "in-progress" ? "0 2px 13px 0 #ffb40033" : "",
-                          transition: "border 0.2s, background 0.22s, color 0.21s, box-shadow 0.18s"
+                          transition: "border 0.2s, background 0.22s, color 0.21s, box-shadow 0.18s",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center"
                         }}
+                        aria-hidden="true"
                       >
                         {milestone.icon}
                       </div>
@@ -641,7 +673,9 @@ function App() {
                   const ms = milestones[selectedMilestone];
                   return (
                     <div className="milestone-detail-card" tabIndex={0}>
-                      <h2 style={{ marginBottom: 1 }}>{ms.icon}{" "}{ms.title}</h2>
+                      <h2 style={{ marginBottom: 1, fontFamily: "'Montserrat', 'Segoe UI', Arial, sans-serif" }}>
+                        <span style={{ verticalAlign: "-2px", marginRight: 7 }}>{ms.icon}</span> {ms.title}
+                      </h2>
                       <div style={{ fontSize: "0.99em", color: "#585858" }}>
                         {ms.term === 'short' && "Short-Term Goal"}
                         {ms.term === 'medium' && "Medium-Term Goal"}

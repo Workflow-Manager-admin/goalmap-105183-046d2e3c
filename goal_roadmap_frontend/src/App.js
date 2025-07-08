@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
 /**
@@ -11,8 +11,31 @@ const SIDEBAR_LINKS = [
   { icon: "⚙️", label: "Settings" },
 ];
 
-// Example milestones for roadmap
-const GOAL_MILESTONES = [
+// Color mapping for milestone statuses
+const STATUS_COLOR = {
+  completed: "#43A047",    // green
+  "in-progress": "#FFB300", // yellow
+  pending: "#C5C5C6",      // grey
+};
+
+/**
+ * Get status string: "completed" | "in-progress" | "pending" for a milestone
+ * @param {number} idx index in array
+ * @param {object} milestone
+ * @param {array} milestones
+ */
+function getMilestoneStatus(idx, milestone, milestones) {
+  if (milestone.completed) return "completed";
+  // In-progress: next incomplete milestone in order
+  if (
+    idx === milestones.findIndex(m => !m.completed)
+  )
+    return "in-progress";
+  return "pending";
+}
+
+// Example milestones for roadmap (moved into default state in App)
+const INITIAL_MILESTONES = [
   {
     icon: "📚",
     title: "Learn JavaScript",
@@ -30,18 +53,51 @@ const GOAL_MILESTONES = [
     title: "Get Internship",
     completed: false,
     description: "Gain real-world experience.",
-  }
+  },
 ];
 
 // PUBLIC_INTERFACE
 function App() {
   const [theme, setTheme] = useState('light');
+  const [milestones, setMilestones] = useState([...INITIAL_MILESTONES]);
   const [selectedMilestone, setSelectedMilestone] = useState(null);
+  const [progress, setProgress] = useState(0); // for animated progress bar
+  const animFrame = useRef(null);
 
   // Effect to apply theme to document element
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  // Animate bar on milestones change
+  useEffect(() => {
+    const completedCount = milestones.filter(m => m.completed).length;
+    // Clamp: if 1 milestone, treat as 100% when that is done
+    const percent = milestones.length === 1
+      ? 100
+      : ((completedCount - 1) / (milestones.length - 1)) * 100;
+    let running = true;
+
+    // Animation: smoothly interpolate progress value to percent
+    const animate = () => {
+      setProgress((cur) => {
+        if (!running) return percent;
+        const diff = percent - cur;
+        if (Math.abs(diff) < 0.5) return percent;
+        return cur + diff * 0.18;
+      });
+      if (running) {
+        animFrame.current = window.requestAnimationFrame(animate);
+      }
+    };
+
+    animFrame.current && window.cancelAnimationFrame(animFrame.current);
+    animFrame.current = window.requestAnimationFrame(animate);
+    return () => {
+      running = false;
+      animFrame.current && window.cancelAnimationFrame(animFrame.current);
+    };
+  }, [milestones]);
 
   // PUBLIC_INTERFACE
   const toggleTheme = () => {
@@ -52,9 +108,13 @@ function App() {
     setSelectedMilestone(index === selectedMilestone ? null : index);
   };
 
-  // Calculates milestone progress percentage
-  const completedCount = GOAL_MILESTONES.filter(m => m.completed).length;
-  const progressPercent = (completedCount - 1) / (GOAL_MILESTONES.length - 1) * 100;
+  const handleMarkAsComplete = (idx) => {
+    setMilestones((prev) =>
+      prev.map((milestone, i) =>
+        i === idx ? { ...milestone, completed: true } : milestone
+      )
+    );
+  };
 
   return (
     <div className="dashboard-root">
@@ -95,44 +155,126 @@ function App() {
               <div className="roadmap-progress-bar-bg">
                 <div 
                   className="roadmap-progress-bar-fg"
-                  style={{ width: `${progressPercent}%` }}
-                  aria-valuenow={progressPercent}
+                  style={{
+                    width: `${progress}%`,
+                    transition: "width 0.33s cubic-bezier(0.45,0.05,0.55,0.95)",
+                  }}
+                  aria-valuenow={progress}
                   aria-valuemin={0}
                   aria-valuemax={100}
                 />
               </div>
               <div className="roadmap-milestones">
-                {GOAL_MILESTONES.map((milestone, idx) => (
-                  <div 
-                    className={`milestone-item${milestone.completed ? ' completed' : ''}${selectedMilestone === idx ? ' active' : ''}`}
-                    key={milestone.title}
-                    tabIndex={0}
-                    role="button"
-                    aria-pressed={selectedMilestone === idx}
-                    title={milestone.title}
-                    onClick={() => handleMilestoneClick(idx)}
-                  >
-                    <div className="milestone-icon">
-                      {milestone.icon}
+                {milestones.map((milestone, idx) => {
+                  const status = getMilestoneStatus(idx, milestone, milestones);
+                  let color;
+                  if (status === "completed") color = STATUS_COLOR.completed; // green
+                  else if (status === "in-progress") color = STATUS_COLOR["in-progress"]; // yellow
+                  else color = STATUS_COLOR.pending; // grey
+
+                  let borderColor;
+                  if (status === "completed") borderColor = STATUS_COLOR.completed;
+                  else if (status === "in-progress") borderColor = STATUS_COLOR["in-progress"];
+                  else borderColor = "#ececec";
+
+                  const iconBg =
+                    status === "completed"
+                      ? `linear-gradient(135deg, var(--primary), var(--secondary))`
+                      : status === "in-progress"
+                        ? "#fffbe0"
+                        : "#f2f2f4";
+
+                  const labelStyle = {};
+                  if (status === "completed") labelStyle.color = STATUS_COLOR.completed;
+                  else if (status === "in-progress") labelStyle.color = STATUS_COLOR["in-progress"];
+                  else labelStyle.color = STATUS_COLOR.pending;
+
+                  return (
+                    <div 
+                      className={`milestone-item${milestone.completed ? ' completed' : ''}${selectedMilestone === idx ? ' active' : ''}${status === 'in-progress' ? ' inprogress' : ''}${status === 'pending' ? ' pending' : ''}`}
+                      key={milestone.title}
+                      tabIndex={0}
+                      role="button"
+                      aria-pressed={selectedMilestone === idx}
+                      title={milestone.title}
+                      onClick={() => handleMilestoneClick(idx)}
+                      style={{}}
+                    >
+                      <div 
+                        className="milestone-icon"
+                        style={{
+                          background: iconBg,
+                          color: status === "completed" ? "#fff" : color,
+                          border: `2px solid ${borderColor}`,
+                          boxShadow: status === "in-progress" ? "0 2px 13px 0 #ffb40033" : "",
+                        }}
+                      >
+                        {milestone.icon}
+                      </div>
+                      <div 
+                        className="milestone-title"
+                        style={labelStyle}
+                      >
+                        {milestone.title}
+                      </div>
                     </div>
-                    <div className="milestone-title">
-                      {milestone.title}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  top: `calc(var(--milestone-size) + 12px)`,
+                  right: 0,
+                  left: 0,
+                  textAlign: "center",
+                  fontWeight: "700",
+                  fontSize: "1.25rem",
+                  color: "var(--primary)",
+                  letterSpacing: "0.5px",
+                  zIndex: 2,
+                  textShadow: "0 2px 7px #e0e5ef",
+                  pointerEvents: "none",
+                  userSelect: "none",
+                }}
+                aria-label={`Progress: ${Math.round(progress)}%`}
+              >
+                {`${Math.round(progress)}% Complete`}
               </div>
             </div>
             {/* Milestone Details (shown if any) */}
             {selectedMilestone !== null && (
               <div className="milestone-detail-card" tabIndex={0}>
-                <h2>{GOAL_MILESTONES[selectedMilestone].icon}{" "}{GOAL_MILESTONES[selectedMilestone].title}</h2>
-                <p>{GOAL_MILESTONES[selectedMilestone].description}</p>
+                <h2>{milestones[selectedMilestone].icon}{" "}{milestones[selectedMilestone].title}</h2>
+                <p>{milestones[selectedMilestone].description}</p>
                 <p>
                   Status:{" "}
                   <strong>
-                    {GOAL_MILESTONES[selectedMilestone].completed ? "Completed" : "In Progress"}
+                    {milestones[selectedMilestone].completed
+                      ? "Completed"
+                      : getMilestoneStatus(selectedMilestone, milestones[selectedMilestone], milestones) === "in-progress"
+                        ? "In Progress"
+                        : "Pending"}
                   </strong>
                 </p>
+                {!milestones[selectedMilestone].completed && (
+                  <button
+                    className="btn"
+                    style={{
+                      marginTop: 18,
+                      background:
+                        getMilestoneStatus(selectedMilestone, milestones[selectedMilestone], milestones) === "in-progress"
+                          ? STATUS_COLOR["in-progress"]
+                          : STATUS_COLOR.pending,
+                      color: "#333",
+                    }}
+                    onClick={() => {
+                      handleMarkAsComplete(selectedMilestone);
+                    }}
+                  >
+                    Mark as Complete
+                  </button>
+                )}
               </div>
             )}
           </div>

@@ -221,25 +221,35 @@
   box-shadow: var(--milestone-active-glow);
   background: #f6fafd;
 }
-.milestone-item.completed .milestone-icon {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: #fff;
-  border: 2px solid var(--primary);
+
+/* Color-coded by status */
+.milestone-item.completed .milestone-title {
+  color: #43A047; /* Green */
 }
-.milestone-item:not(.completed) .milestone-icon {
-  background: #fff1e0;
-  color: var(--primary);
-  border: 2px solid #ececec;
+.milestone-item.inprogress .milestone-title {
+  color: #FFB300; /* Yellow */
 }
+.milestone-item.pending .milestone-title {
+  color: #C5C5C6; /* Grey */
+}
+
+/* Color-coded icon and border for each status (done via inline style for flexibility) */
+
 .milestone-item .milestone-title {
   margin-top: 7px;
-  color: #333;
   font-weight: 600;
   font-size: 1.01rem;
   line-height: 1.1;
   text-align: center;
   white-space: pre-line;
 }
+
+/* Optional: animated transition for title color and icon border */
+.milestone-item .milestone-title,
+.milestone-item .milestone-icon {
+  transition: color 0.22s, background 0.22s, border 0.22s;
+}
+
 
 .milestone-icon {
   width: var(--milestone-size);

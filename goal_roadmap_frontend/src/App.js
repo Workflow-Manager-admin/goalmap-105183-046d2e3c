@@ -34,7 +34,7 @@ function getMilestoneStatus(idx, milestone, milestones) {
   return "pending";
 }
 
-// Example milestones for roadmap (moved into default state in App)
+// Example milestones for roadmap (default state in App)
 const INITIAL_MILESTONES = [
   {
     icon: "📚",
@@ -62,6 +62,8 @@ function App() {
   const [milestones, setMilestones] = useState([...INITIAL_MILESTONES]);
   const [selectedMilestone, setSelectedMilestone] = useState(null);
   const [progress, setProgress] = useState(0); // for animated progress bar
+  const [appearStates, setAppearStates] = useState(() => Array(INITIAL_MILESTONES.length).fill(false));
+  const [statusFlashes, setStatusFlashes] = useState(() => Array(INITIAL_MILESTONES.length).fill(false));
   const animFrame = useRef(null);
 
   // Effect to apply theme to document element
@@ -99,6 +101,47 @@ function App() {
     };
   }, [milestones]);
 
+  // Animate milestones' entrance on first mount
+  useEffect(() => {
+    // Appear one-by-one with a delay
+    const timeouts = [];
+    for (let i = 0; i < appearStates.length; ++i) {
+      timeouts.push(setTimeout(() => {
+        setAppearStates(prev => {
+          const copy = [...prev];
+          copy[i] = true;
+          return copy;
+        });
+      }, 160 * i));
+    }
+    return () => timeouts.forEach(clearTimeout);
+    // eslint-disable-next-line
+  }, []);
+
+  // Animate status change flash (corner case: when "Mark as Complete" is pressed)
+  useEffect(() => {
+    // Only trigger for real status transitions (not initial mount)
+    if (milestones.length !== statusFlashes.length) return;
+    milestones.forEach((milestone, i) => {
+      if ((milestone.completed && !INITIAL_MILESTONES[i].completed) ||
+          (!milestone.completed && INITIAL_MILESTONES[i].completed)) {
+        setStatusFlashes((prev) => {
+          const copy = [...prev];
+          copy[i] = true;
+          return copy;
+        });
+        setTimeout(() => {
+          setStatusFlashes((prev) => {
+            const copy = [...prev];
+            copy[i] = false;
+            return copy;
+          });
+        }, 800);
+      }
+    });
+    // eslint-disable-next-line
+  }, [milestones]); // Only run on milestones' status change
+
   // PUBLIC_INTERFACE
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
@@ -114,6 +157,19 @@ function App() {
         i === idx ? { ...milestone, completed: true } : milestone
       )
     );
+    // trigger status flash for animation
+    setStatusFlashes((prev) => {
+      const copy = [...prev];
+      copy[idx] = true;
+      return copy;
+    });
+    setTimeout(() => {
+      setStatusFlashes((prev) => {
+        const copy = [...prev];
+        copy[idx] = false;
+        return copy;
+      });
+    }, 800);
   };
 
   return (
@@ -146,6 +202,10 @@ function App() {
       {/* Main Content */}
       <main className="main-content">
         <section className="roadmap-section">
+          <div className="roadmap-motivation-header" tabIndex={-1}>
+            <span role="img" aria-label="flag" className="roadmap-motivation-icon">🏁</span>
+            <span>Your Journey to Success Starts Here</span>
+          </div>
           <h1 className="roadmap-title">
             My Goal Roadmap
           </h1>
@@ -154,10 +214,9 @@ function App() {
             <div className="roadmap-visual">
               <div className="roadmap-progress-bar-bg">
                 <div 
-                  className="roadmap-progress-bar-fg"
+                  className="roadmap-progress-bar-fg roadmap-progress-bar-anim"
                   style={{
                     width: `${progress}%`,
-                    transition: "width 0.33s cubic-bezier(0.45,0.05,0.55,0.95)",
                   }}
                   aria-valuenow={progress}
                   aria-valuemin={0}
@@ -189,16 +248,26 @@ function App() {
                   else if (status === "in-progress") labelStyle.color = STATUS_COLOR["in-progress"];
                   else labelStyle.color = STATUS_COLOR.pending;
 
+                  // Assemble milestone animation classes
+                  let animClass = "milestone-item-appear";
+                  if (appearStates[idx]) animClass += " active";
+                  if (statusFlashes[idx]) animClass += " milestone-status-flash";
+
                   return (
                     <div 
-                      className={`milestone-item${milestone.completed ? ' completed' : ''}${selectedMilestone === idx ? ' active' : ''}${status === 'in-progress' ? ' inprogress' : ''}${status === 'pending' ? ' pending' : ''}`}
+                      className={`milestone-item${milestone.completed ? ' completed' : ''}${selectedMilestone === idx ? ' active' : ''}${status === 'in-progress' ? ' inprogress' : ''}${status === 'pending' ? ' pending' : ''} ${animClass}`}
                       key={milestone.title}
                       tabIndex={0}
                       role="button"
                       aria-pressed={selectedMilestone === idx}
                       title={milestone.title}
                       onClick={() => handleMilestoneClick(idx)}
-                      style={{}}
+                      style={{
+                        opacity: appearStates[idx] ? 1 : 0,
+                        pointerEvents: appearStates[idx] ? 'auto' : 'none',
+                        transform: appearStates[idx] ? 'none' : 'translateY(45px) scale(.95)',
+                        transition: 'opacity 0.49s cubic-bezier(.35,1.4,.8,1.0), transform 0.5s cubic-bezier(.25,1.15,.9,.9)'
+                      }}
                     >
                       <div 
                         className="milestone-icon"
@@ -207,6 +276,7 @@ function App() {
                           color: status === "completed" ? "#fff" : color,
                           border: `2px solid ${borderColor}`,
                           boxShadow: status === "in-progress" ? "0 2px 13px 0 #ffb40033" : "",
+                          transition: "border 0.2s, background 0.22s, color 0.21s, box-shadow 0.18s"
                         }}
                       >
                         {milestone.icon}

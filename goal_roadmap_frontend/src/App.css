@@ -1,4 +1,3 @@
-/* CSS Variables for Theme Management */
 :root {
   /* Light theme colors */
   --bg-primary: #ffffff;
@@ -8,27 +7,9 @@
   --border-color: #e9ecef;
   --button-bg: #007bff;
   --button-text: #ffffff;
-}
-
-[data-theme="dark"] {
-  /* Dark theme colors */
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #282c34;
-  --text-primary: #ffffff;
-  --text-secondary: #61dafb;
-  --border-color: #404040;
-  --button-bg: #0056b3;
-  --button-text: #ffffff;
-}
-
-/* ======= Minimalist Dashboard, Sidebar & Roadmap Section ======= */
-
-:root {
   --primary: #1565C0;
   --secondary: #43A047;
   --accent: #FFB300;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
   --sidebar-width: 220px;
   --shadow: 0 4px 24px 0 rgba(0,0,0,0.10);
   --milestone-size: 54px;
@@ -36,6 +17,16 @@
   --border-radius: 20px;
   --duration: 0.2s;
   --roadmap-bar-height: 8px;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #282c34;
+  --text-primary: #ffffff;
+  --text-secondary: #61dafb;
+  --border-color: #404040;
+  --button-bg: #0056b3;
+  --button-text: #ffffff;
 }
 
 /* MAIN LAYOUT */
@@ -46,7 +37,6 @@
   font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
 }
 
-/* SIDEBAR */
 .sidebar {
   width: var(--sidebar-width);
   background: var(--bg-primary);
@@ -76,14 +66,12 @@
   font-weight: 700;
   font-size: 1.18rem;
 }
-
 .sidebar-nav {
   flex: none;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .sidebar-link {
   display: flex;
   align-items: center;
@@ -100,19 +88,16 @@
   background: var(--bg-secondary);
   color: var(--primary) !important;
 }
-
 .sidebar-icon {
   font-size: 1.36em;
   width: 30px;
 }
-
 .sidebar-bottom {
   margin-top: auto;
   display: flex;
   justify-content: center;
   padding-top: 16px;
 }
-
 .theme-toggle {
   background: var(--accent);
   color: #fff;
@@ -139,6 +124,40 @@
   flex-direction: column;
 }
 
+/* ---- Motivation Header ---- */
+.roadmap-motivation-header {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 18px;
+  font-size: 1.27rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--secondary);
+  background: linear-gradient(90deg, #F6FFD5 0%, #e3f8e3 70%);
+  border-radius: 16px;
+  padding: 14px 6px 12px 6px;
+  box-shadow: 0 2px 11px 0 #e2f4d950;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(-32px) scale(.98);
+  animation: motivationFadeIn 0.88s 0.13s cubic-bezier(.33,.6,.4,1.1) forwards;
+}
+.roadmap-motivation-icon {
+  font-size: 1.6em;
+  vertical-align: -2px;
+  filter: drop-shadow(0 2px 7px #ffd63586);
+}
+@keyframes motivationFadeIn {
+  0% { opacity: 0; transform: translateY(-32px) scale(.98);}
+  75% { opacity: 1; }
+  100% { opacity: 1; transform: none; }
+}
+
+/* ---- Roadmap Card Section ---- */
 .roadmap-section {
   width: min(900px,95vw);
   margin: 0 auto;
@@ -148,6 +167,9 @@
   padding: 2.7rem 1.2rem 2.3rem 1.2rem;
   margin-top: 36px;
   transition: box-shadow 0.22s, background 0.22s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .roadmap-title {
@@ -156,12 +178,20 @@
   margin: 0 0 29px 5px;
   color: var(--primary);
   letter-spacing: -1px;
+  text-align: center;
+  width: 100%;
 }
 
 /* ROADMAP VISUAL (progress + milestones) */
 .roadmap-container {
   min-height: 160px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
 }
+
 .roadmap-visual {
   position: relative;
   width: 100%;
@@ -170,8 +200,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
 }
 
+/* ------ Progress Bar Animation ------ */
 .roadmap-progress-bar-bg {
   position: absolute;
   left: 6px; right: 6px;
@@ -181,17 +213,22 @@
   border-radius: 12px;
   width: calc(100% - 12px);
   z-index: 0;
+  overflow: hidden;
 }
+
 .roadmap-progress-bar-fg {
   background: linear-gradient(90deg, var(--primary), var(--secondary));
   height: 100%;
   border-radius: 12px;
   width: 0;
-  transition: width 0.33s;
   box-shadow: 0 0 12px 0 var(--secondary), 0 0 2px #1565c07c;
+  /* transition: width is overwritten for anim */
+}
+.roadmap-progress-bar-anim {
+  transition: width 0.66s cubic-bezier(.33,.99,.5,1.07);
 }
 
-/* MILESTONES */
+/* MILESTONES CONTAINER */
 .roadmap-milestones {
   width: 100%;
   display: flex;
@@ -201,6 +238,7 @@
   z-index: 2;
 }
 
+/* ------ Milestone Item & Animations ------ */
 .milestone-item {
   flex: 1 1 0;
   display: flex;
@@ -215,6 +253,8 @@
   box-shadow: none;
   outline: none;
   border: none;
+  opacity: 1;
+  /* Animation state handled via style or .active class */
 }
 .milestone-item:focus-visible,
 .milestone-item.active {
@@ -222,34 +262,51 @@
   background: #f6fafd;
 }
 
+/* Milestone Appearance Animation */
+.milestone-item-appear {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(45px) scale(.94);
+}
+.milestone-item-appear.active {
+  opacity: 1;
+  pointer-events: auto;
+  animation: milestoneAppearAnim 0.66s cubic-bezier(.26,1.12,.6,1.0);
+  transform: none;
+}
+@keyframes milestoneAppearAnim {
+  0%   { opacity: 0; transform: translateY(45px) scale(.93);}
+  66%  { opacity: 1;}
+  100% { opacity: 1; transform: none;}
+}
+
+/* Milestone Status Flash (on status change: e.g. Mark as Complete) */
+.milestone-status-flash {
+  animation: milestoneStatusFlash 0.8s cubic-bezier(.30,1.4,.62,.97);
+}
+@keyframes milestoneStatusFlash {
+  0%   { box-shadow: 0 0 0 0 #43A0471f }
+  15%  { box-shadow: 0 0 0 24px #43A04719 }
+  50%  { box-shadow: 0 0 0 6px #43a04755 }
+  100% { box-shadow: 0 0 0 0 #43A04700 }
+}
+
 /* Color-coded by status */
 .milestone-item.completed .milestone-title {
-  color: #43A047; /* Green */
+  color: #43A047;
 }
 .milestone-item.inprogress .milestone-title {
-  color: #FFB300; /* Yellow */
+  color: #FFB300;
 }
 .milestone-item.pending .milestone-title {
-  color: #C5C5C6; /* Grey */
+  color: #C5C5C6;
 }
 
-/* Color-coded icon and border for each status (done via inline style for flexibility) */
-
-.milestone-item .milestone-title {
-  margin-top: 7px;
-  font-weight: 600;
-  font-size: 1.01rem;
-  line-height: 1.1;
-  text-align: center;
-  white-space: pre-line;
-}
-
-/* Optional: animated transition for title color and icon border */
+/* Milestone title & icon transitions */
 .milestone-item .milestone-title,
 .milestone-item .milestone-icon {
   transition: color 0.22s, background 0.22s, border 0.22s;
 }
-
 
 .milestone-icon {
   width: var(--milestone-size);
@@ -309,6 +366,14 @@
   }
   .sidebar-title { display: none; }
   .sidebar-link-label { display: none; }
+  .roadmap-title,
+  .roadmap-motivation-header {
+    font-size: 1.07rem;
+    padding-left: 2px; padding-right: 2px;
+  }
+  .milestone-detail-card {
+    width: 97vw !important;
+  }
 }
 
 @media (max-width: 650px) {
@@ -333,6 +398,16 @@
   }
   .main-content {
     padding: 14px 0 0 0;
+  }
+  .roadmap-section {
+    padding: 6vw 1vw 4vw 1vw;
+    min-width: unset;
+    margin-top: 12vw !important;
+  }
+  .milestone-detail-card {
+    width: 98vw !important;
+    min-width: unset;
+    font-size: 104%;
   }
 }
 
@@ -367,12 +442,10 @@
   transition: background-color 0.3s ease;
   position: relative;
 }
-
 .App-link {
   color: var(--text-secondary);
   transition: color 0.3s ease;
 }
-
 .theme-toggle {
   position: absolute;
   top: 20px;
@@ -388,17 +461,14 @@
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
 .theme-toggle:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   opacity: 0.9;
 }
-
 .theme-toggle:active {
   transform: translateY(0);
 }
-
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
@@ -407,8 +477,6 @@
     transform: rotate(360deg);
   }
 }
-
-/* Responsive design for mobile */
 @media (max-width: 768px) {
   .theme-toggle {
     top: 10px;
